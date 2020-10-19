@@ -43,8 +43,8 @@ RUN pip install tensorflow==1.9.0 dm-sonnet==1.23
 RUN NP_INC="$(python -c 'import numpy as np; print(np.get_include())[5:]')" && \
     git clone https://github.com/deepmind/lab.git && \
     cd lab && \
-    sed -i 's@hdrs = glob(\[@hdrs = glob(["'"$NP_INC"'/\*\*/*.h", @g' python.BUILD && \
-    sed -i 's@includes = \[@includes = ["'"$NP_INC"'", @g' python.BUILD && \
+    sed -i 's@hdrs = glob(\[@hdrs = glob(["'"$NP_INC"'/\*\*/*.h", @g' bazel/python.BUILD && \
+    sed -i 's@includes = \[@includes = ["'"$NP_INC"'", @g' bazel/python.BUILD && \
     bazel build -c opt python/pip_package:build_pip_package && \
     pip install wheel && \
     ./bazel-bin/python/pip_package/build_pip_package /tmp/dmlab_pkg && \

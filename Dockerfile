@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:nightly-devel-gpu
+FROM ubuntu:18.04
 
 # Install dependencies.
 # g++ (v. 5.4) does not work: https://github.com/tensorflow/tensorflow/issues/13308
@@ -8,7 +8,15 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
                         --slave /usr/bin/g++ g++ /usr/bin/g++-7 && \
     update-alternatives --config gcc
 
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
+    curl \
+    zip \
+    unzip \
+    software-properties-common \
+    pkg-config \
+    g++-4.8 \
+    zlib1g-dev \
+    python \
     lua5.1 \
     liblua5.1-0-dev \
     libffi-dev \
@@ -18,10 +26,15 @@ RUN apt-get install -y \
     libosmesa6-dev \
     libglu1-mesa \
     libglu1-mesa-dev \
+    python-dev \
+    build-essential \
+    git \
+    python-setuptools \
+    python-pip \
     libjpeg-dev
 
 # Install TensorFlow and other dependencies
-RUN pip install dm-sonnet
+RUN pip install tensorflow==1.9.0 dm-sonnet==1.23
 
 RUN rm /etc/bazel* && rm -r /bazel
 
@@ -38,6 +51,8 @@ RUN mkdir /bazel && \
     rm -f /bazel/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh
 
 WORKDIR /root
+# Build and install DeepMind Lab pip package.
+
 # Build and install DeepMind Lab pip package.
 # We explicitly set the Numpy path as shown here:
 # https://github.com/deepmind/lab/blob/master/docs/users/build.md
@@ -60,3 +75,25 @@ RUN mkdir dataset && \
     sed -e 's/.*```sh\(.*\)```.*/\1/' | \
     tr '\r' '\n' | \
     bash
+
+# Clone.
+RUN git clone https://github.com/deepmind/scalable_agent.git
+WORKDIR scalable_agent
+
+# Build dynamic batching module.
+RUN TF_INC="$(python -c 'import tensorflow as tf; print(tf.sysconfig.get_include())')" && \
+    TF_LIB="$(python -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())')" && \
+    g++-4.8 -std=c++11 -shared batcher.cc -o batcher.so -fPIC -I $TF_INC -O2 -D_GLIBCXX_USE_CXX11_ABI=0 -L$TF_LIB -ltensorflow_framework
+
+# Run tests.
+# RUN python py_process_test.py
+# RUN python dynamic_batching_test.py
+# RUN python vtrace_test.py
+
+# Run.
+# CMD ["sh", "-c", "python experiment.py --total_environment_frames=10000 --dataset_path=../dataset && python experiment.py --mode=test --test_num_episodes=5"]
+
+# Docker commands:
+#   docker rm scalable_agent -v
+#   docker build -t scalable_agent .
+#   docker run --name scalable_agent scalable_agent

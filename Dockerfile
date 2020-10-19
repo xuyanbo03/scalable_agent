@@ -70,12 +70,12 @@ RUN TF_INC="$(python -c 'import tensorflow as tf; print(tf.sysconfig.get_include
     g++-4.8 -std=c++11 -shared batcher.cc -o batcher.so -fPIC -I $TF_INC -O2 -D_GLIBCXX_USE_CXX11_ABI=0 -L$TF_LIB -ltensorflow_framework
 
 # Run tests.
-RUN python py_process_test.py
-RUN python dynamic_batching_test.py
-RUN python vtrace_test.py
+# RUN python py_process_test.py
+# RUN python dynamic_batching_test.py
+# RUN python vtrace_test.py
 
 # Run.
-CMD ["sh", "-c", "python experiment.py --total_environment_frames=10000 --dataset_path=../dataset && python experiment.py --mode=test --test_num_episodes=5"]
+# CMD ["sh", "-c", "python experiment.py --total_environment_frames=10000 --dataset_path=../dataset && python experiment.py --mode=test --test_num_episodes=5"]
 
 # Docker commands:
 #   docker rm scalable_agent -v

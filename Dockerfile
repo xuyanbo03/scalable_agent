@@ -44,7 +44,7 @@ RUN NP_INC="$(python -c 'import numpy as np; print(np.get_include())[5:]')" && \
     git clone https://github.com/deepmind/lab.git && \
     cd lab && \
     git fetch && \
-    git checkout release-2018-06-20 && \
+    git checkout release-2019-02-04 && \
     sed -i 's@hdrs = glob(\[@hdrs = glob(["'"$NP_INC"'/\*\*/*.h", @g' python.BUILD && \
     sed -i 's@includes = \[@includes = ["'"$NP_INC"'", @g' python.BUILD && \
     bazel build -c opt python/pip_package:build_pip_package && \

@@ -1,13 +1,8 @@
+
 FROM ubuntu:18.04
 
 # Install dependencies.
 # g++ (v. 5.4) does not work: https://github.com/tensorflow/tensorflow/issues/13308
-RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
-    apt-get update && apt install g++-7 -y && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60  \
-                        --slave /usr/bin/g++ g++ /usr/bin/g++-7 && \
-    update-alternatives --config gcc
-
 RUN apt-get update && apt-get install -y \
     curl \
     zip \
@@ -33,25 +28,15 @@ RUN apt-get update && apt-get install -y \
     python-pip \
     libjpeg-dev
 
+# Install bazel
+RUN echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | \
+    tee /etc/apt/sources.list.d/bazel.list && \
+    curl https://bazel.build/bazel-release.pub.gpg | \
+    apt-key add - && \
+    apt-get update && apt-get install -y bazel
+
 # Install TensorFlow and other dependencies
 RUN pip install tensorflow==1.9.0 dm-sonnet==1.23
-
-RUN rm /etc/bazel* && rm -r /bazel
-
-# Install the most recent bazel release.
-ENV BAZEL_VERSION 0.16.1
-WORKDIR /
-RUN mkdir /bazel && \
-    cd /bazel && \
-    curl -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" -fSsL -O https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh && \
-    curl -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" -fSsL -o /bazel/LICENSE.txt https://raw.githubusercontent.com/bazelbuild/bazel/master/LICENSE && \
-    chmod +x bazel-*.sh && \
-    ./bazel-$BAZEL_VERSION-installer-linux-x86_64.sh && \
-    cd / && \
-    rm -f /bazel/bazel-$BAZEL_VERSION-installer-linux-x86_64.sh
-
-WORKDIR /root
-# Build and install DeepMind Lab pip package.
 
 # Build and install DeepMind Lab pip package.
 # We explicitly set the Numpy path as shown here:
@@ -86,14 +71,6 @@ RUN TF_INC="$(python -c 'import tensorflow as tf; print(tf.sysconfig.get_include
     g++-4.8 -std=c++11 -shared batcher.cc -o batcher.so -fPIC -I $TF_INC -O2 -D_GLIBCXX_USE_CXX11_ABI=0 -L$TF_LIB -ltensorflow_framework
 
 # Run tests.
-# RUN python py_process_test.py
-# RUN python dynamic_batching_test.py
-# RUN python vtrace_test.py
-
-# Run.
-# CMD ["sh", "-c", "python experiment.py --total_environment_frames=10000 --dataset_path=../dataset && python experiment.py --mode=test --test_num_episodes=5"]
-
-# Docker commands:
-#   docker rm scalable_agent -v
-#   docker build -t scalable_agent .
-#   docker run --name scalable_agent scalable_agent
+#RUN python py_process_test.py
+#RUN python dynamic_batching_test.py
+#RUN python vtrace_test.py
